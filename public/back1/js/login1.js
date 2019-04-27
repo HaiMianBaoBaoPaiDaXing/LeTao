@@ -1,0 +1,81 @@
+$(function(){
+	//表单提交插件
+	$('#login-from').bootstrapValidator({
+		//1.配置校验图标
+		feedbackIcons:{
+			valid:'glyphicon glyphicon-ok',
+			invalid:'glyphicon glyphicon-remove',
+			validating:'glyphicon glyphicon-refresh'
+		},
+		//2.校验的字段
+		fields:{
+			//用户名,对应表单的name属性
+			username:{
+				validators:{
+					//不为空
+					notEmpty:{
+						//为空时的提示
+						message:"用户名不能为空"
+					},
+					//长度校验
+					stringLength:{
+						min:2,
+						max:6,
+						message:"用户名长度2-6位"
+					},
+					callback:{
+						message:"用户名不存在"
+					}
+				}
+			},
+			password:{
+				validators:{
+					notEmpty:{
+						message:'密码不能为空'
+					},
+					stringLength:{
+						min:6,
+						max:30,
+						message:'密码长度必须在6-30位之间'
+					},
+					callback:{
+						message:"密码错误"
+					}
+				}
+			}
+		}
+	})
+	//此时表单提交成功，需要租吃默认的提交，改用ajax提交
+	$("#login-from").on('success.form.bv', function (e) {
+		//阻止默认提交，插件的方法
+		e.preventDefault();
+		//使用ajax提交逻辑
+		$.ajax({
+			type:"post",
+			//使用表单的serialize方法获取表单的内容
+			data:$("#login-from").serialize(),
+			//后台接口地址
+			url:"/employee/employeeLogin",
+			dataType:"json",
+			success:function(info){
+				//此刻成功发送了ajax请求，判断是否输入了正确的账号和密码			
+				console.log(info)
+				if (info.success) {
+					//登录到首页
+					location.href="index1.html";
+				}
+				//用户名或者密码错误，更新提示
+				if (info.error===1000) {
+					$('#login-from').data("bootstrapValidator").updateStatus("username","INVALID","callback");
+				}
+				if(info.error===1001){
+					$('#login-from').data("bootstrapValidator").updateStatus("password","INVALID","callback");
+				}
+			}
+		})
+	});
+	//3.重置按钮，重置表单数据
+	$('#lt-reset').click(function(){
+		$('#login-from').data("bootstrapValidator").resetForm();
+	})
+})
